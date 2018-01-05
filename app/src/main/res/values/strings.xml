@@ -1,0 +1,26 @@
+<resources>
+    <string name="app_name">DictAppKotlin</string>
+    <string-array name="spinner">
+        <item>PL</item>
+        <item>EN</item>
+        <item>DE</item>
+        <item>RU</item>
+        <item>FR</item>
+    </string-array>
+    <string-array name="spinner_quiz">
+        <item>EN</item>
+        <item>DE</item>
+        <item>RU</item>
+        <item>FR</item>
+    </string-array>
+    <string name="title_activity_main">MainActivity</string>
+    <!--
+    This string is used for square devices and overridden by hello_world in
+    values-round/strings.xml for round devices.
+    -->
+    <string name="hello_world">Hello Square World!</string>
+    <string name="go_to_quiz">Quiz</string>
+    <string name="search">Szukaj</string>
+    <string name="remember_word">Zapamiętaj słowo</string>
+    <string name="input">Wpisz słowo</string>
+</resources>
