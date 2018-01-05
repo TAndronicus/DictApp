@@ -13,12 +13,12 @@ import android.widget.*
  */
 class QuizActivity : AppCompatActivity() {
 
-    lateinit var repoDatabase: RepoDatabase
-    internal var rightOne: Int? = null
-    lateinit var typ1: Button
-    lateinit var typ2: Button
-    lateinit var typ3: Button
-    lateinit var typ4: Button
+    private lateinit var repoDatabase: RepoDatabase
+    private var rightOne: Int? = null
+    private lateinit var typ1: Button
+    private lateinit var typ2: Button
+    private lateinit var typ3: Button
+    private lateinit var typ4: Button
     lateinit var wordToMatch: TextView
     lateinit var spinner: Spinner
 
@@ -30,12 +30,12 @@ class QuizActivity : AppCompatActivity() {
                 R.array.spinner_quiz, android.R.layout.simple_spinner_item)
         adapter.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item)
         spinner.adapter = adapter
-        var dict: Button = findViewById(R.id.dict)
+        val dict: Button = findViewById(R.id.dict)
         typ1 = findViewById(R.id.typ1)
         typ2 = findViewById(R.id.typ2)
         typ3 = findViewById(R.id.typ3)
         typ4 = findViewById(R.id.typ4)
-        val buttons = arrayOf<Button>(typ1, typ2, typ3, typ4)
+        val buttons = arrayOf(typ1, typ2, typ3, typ4)
         wordToMatch = findViewById(R.id.wordToMatch)
         val drawNext: Button = findViewById(R.id.drawNext)
 
@@ -93,7 +93,7 @@ class QuizActivity : AppCompatActivity() {
             val order = drawElements(entities!!.size)
             rightOne = (Math.random() * 4).toInt()
             for (i in 0..3) {
-                buttons[i].setText(entities[order[i]].word)
+                buttons[i].text = entities[order[i]].word
                 buttons[i].setTextColor(Color.BLACK)
             }
             wordToMatch.text = entities[order[rightOne!!]].translation
@@ -122,19 +122,11 @@ class QuizActivity : AppCompatActivity() {
     private fun getEntitiesWithGivenLang(spinner: Spinner): List<TransEntity>? {
         val entities = repoDatabase.repoDao.allRepos
         var result: MutableList<TransEntity> = ArrayList()
-        for (entity in entities) {
-            if (entity.lang.equals(spinner.selectedItem.toString(), ignoreCase = true)) {
-                result.add(entity)
-            }
-        }
+        entities.filterTo(result) { it.lang.equals(spinner.selectedItem.toString(), ignoreCase = true) }
         if (result.size < 4) {
             for (i in 0..4) {
                 result = ArrayList()
-                for (entity in entities) {
-                    if (entity.lang.equals(spinner.getItemAtPosition(i).toString(), ignoreCase = true)) {
-                        result.add(entity)
-                    }
-                }
+                entities.filterTo(result) { it.lang.equals(spinner.getItemAtPosition(i).toString(), ignoreCase = true) }
                 if (result.size > 3) {
                     spinner.setSelection(i)
                     return result
@@ -157,10 +149,10 @@ class QuizActivity : AppCompatActivity() {
     override fun onRestoreInstanceState(savedInstanceState: Bundle) {
         super.onRestoreInstanceState(savedInstanceState)
         wordToMatch.text = savedInstanceState.getString("wordToMatch")
-        typ1.setText(savedInstanceState.getString("typ1"))
-        typ2.setText(savedInstanceState.getString("typ2"))
-        typ3.setText(savedInstanceState.getString("typ3"))
-        typ4.setText(savedInstanceState.getString("typ4"))
+        typ1.text = savedInstanceState.getString("typ1")
+        typ2.text = savedInstanceState.getString("typ2")
+        typ3.text = savedInstanceState.getString("typ3")
+        typ4.text = savedInstanceState.getString("typ4")
         spinner.setSelection(savedInstanceState.getInt("spinnerSelection"))
         typ1.setTextColor(savedInstanceState.getInt("typ1Color"))
         typ2.setTextColor(savedInstanceState.getInt("typ2Color"))
@@ -171,14 +163,14 @@ class QuizActivity : AppCompatActivity() {
     override fun onSaveInstanceState(outState: Bundle?) {
         super.onSaveInstanceState(outState)
         outState!!.putString("wordToMatch", wordToMatch.text.toString())
-        outState.putString("typ1", typ1.getText().toString())
-        outState.putString("typ2", typ2.getText().toString())
-        outState.putString("typ3", typ3.getText().toString())
-        outState.putString("typ4", typ4.getText().toString())
+        outState.putString("typ1", typ1.text.toString())
+        outState.putString("typ2", typ2.text.toString())
+        outState.putString("typ3", typ3.text.toString())
+        outState.putString("typ4", typ4.text.toString())
         outState.putInt("spinnerSelection", spinner.selectedItemPosition)
-        outState.putInt("typ1Color", typ1.getCurrentTextColor())
-        outState.putInt("typ2Color", typ2.getCurrentTextColor())
-        outState.putInt("typ3Color", typ3.getCurrentTextColor())
-        outState.putInt("typ4Color", typ4.getCurrentTextColor())
+        outState.putInt("typ1Color", typ1.currentTextColor)
+        outState.putInt("typ2Color", typ2.currentTextColor)
+        outState.putInt("typ3Color", typ3.currentTextColor)
+        outState.putInt("typ4Color", typ4.currentTextColor)
     }
 }

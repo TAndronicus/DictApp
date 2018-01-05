@@ -12,7 +12,6 @@ import android.widget.ArrayAdapter
 import com.android.volley.AuthFailureError
 import com.android.volley.Request
 import com.android.volley.Response
-import com.android.volley.VolleyError
 import com.android.volley.toolbox.StringRequest
 import com.android.volley.toolbox.Volley
 import com.example.jbiedrzy.dictappkotlin.Constants.Companion.PonsUrl
@@ -27,25 +26,25 @@ import java.net.URLEncoder.encode
 
 class Dict : AppCompatActivity(), Constants {
 
-    lateinit var repoDatabase: RepoDatabase
+    private lateinit var repoDatabase: RepoDatabase
     internal var showOnceNotGiven: Boolean = false
     internal var showOnceNotFound: Boolean = false
-    internal var showOnceWriteInDb: Boolean = false
-    lateinit var translation1: TextView
-    lateinit var translation2: TextView
-    lateinit var translation3: TextView
-    lateinit var translation4: TextView
-    lateinit var source1: TextView
-    lateinit var source2: TextView
-    lateinit var source3: TextView
-    lateinit var source4: TextView
-    lateinit var language1: TextView
-    lateinit var language2: TextView
-    lateinit var language3: TextView
-    lateinit var language4: TextView
-    lateinit var word: EditText
-    lateinit var spinner: Spinner
-    lateinit var imm: InputMethodManager
+    private var showOnceWriteInDb: Boolean = false
+    private lateinit var translation1: TextView
+    private lateinit var translation2: TextView
+    private lateinit var translation3: TextView
+    private lateinit var translation4: TextView
+    private lateinit var source1: TextView
+    private lateinit var source2: TextView
+    private lateinit var source3: TextView
+    private lateinit var source4: TextView
+    private lateinit var language1: TextView
+    private lateinit var language2: TextView
+    private lateinit var language3: TextView
+    private lateinit var language4: TextView
+    private lateinit var word: EditText
+    private lateinit var spinner: Spinner
+    private lateinit var imm: InputMethodManager
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -79,7 +78,7 @@ class Dict : AppCompatActivity(), Constants {
 
         //Search
         search.setOnClickListener {
-            if (word.text.toString().length == 0) {
+            if (word.text.toString().isEmpty()) {
                 Toast.makeText(applicationContext, "Podaj słowo", Toast.LENGTH_SHORT).show()
             } else {
                 retrieveAndSetUpTranslations(languages, translations, sources)
@@ -88,7 +87,7 @@ class Dict : AppCompatActivity(), Constants {
         }
         //Remember
         rememberWord.setOnClickListener {
-            if (word.text.toString().length == 0) {
+            if (word.text.toString().isEmpty()) {
                 Toast.makeText(applicationContext, "Podaj słowo", Toast.LENGTH_SHORT).show()
             } else {
                 val entities = retrieveAndSetUpTranslations(languages, translations, sources)
@@ -212,16 +211,14 @@ class Dict : AppCompatActivity(), Constants {
         else if (direction == "ru")
             infixes.remove("fr")
         val translateTo = ArrayList<String>(infixes.size)
-        for (infix in infixes) {
-            translateTo.add(addLanguage(infix, direction))
-        }
+        infixes.mapTo(translateTo) { addLanguage(it, direction) }
         return translateTo
 
     }
 
     private fun addLanguage(infix: String, direction: String): String {
 
-        return if (infix.compareTo(direction) < 0)
+        return if (infix < direction)
             infix + direction
         else
             direction + infix
@@ -236,28 +233,23 @@ class Dict : AppCompatActivity(), Constants {
                     encode(direction, myCharset))
             val url = PonsUrl + "?" + query
             val stringRequest = object : StringRequest(Request.Method.GET, url,
-                    object : Response.Listener<String> {
-                        override fun onResponse(response: String) {
-                            val result: List<List<String>>
-                            try {
-                                result = retrieveTranslations(response)
-                                setUpTranslation(source, translation, result)
-                            } catch (e: Exception) {
-                                if (showOnceNotFound) {
-                                    Toast.makeText(applicationContext, direction + ": Nie znaleziono podanego słowa", Toast.LENGTH_SHORT).show()
-                                }
-                                showOnceNotFound = false
-                                e.printStackTrace()
+                    Response.Listener<String> { response ->
+                        val result: List<List<String>>
+                        try {
+                            result = retrieveTranslations(response)
+                            setUpTranslation(source, translation, result)
+                        } catch (e: Exception) {
+                            if (showOnceNotFound) {
+                                Toast.makeText(applicationContext, direction + ": Nie znaleziono podanego słowa", Toast.LENGTH_SHORT).show()
                             }
-
+                            showOnceNotFound = false
+                            e.printStackTrace()
                         }
-                    }, object : Response.ErrorListener {
-                override fun onErrorResponse(error: VolleyError) {
-                    if (showOnceNotGiven) {
-                        Toast.makeText(applicationContext, "Nie podano słowa.", Toast.LENGTH_LONG).show()
-                    }
-                    showOnceNotGiven = false
+                    }, Response.ErrorListener {
+                if (showOnceNotGiven) {
+                    Toast.makeText(applicationContext, "Nie podano słowa.", Toast.LENGTH_LONG).show()
                 }
+                showOnceNotGiven = false
             }) {
                 @Throws(AuthFailureError::class)
                 override fun getHeaders(): Map<String, String> {
@@ -327,10 +319,10 @@ class Dict : AppCompatActivity(), Constants {
                         val originalSource = translations.getJSONObject(l).getString("source")
                         originalSource.replace("\n".toRegex(), "")
                         var temp = originalSource.split(">".toRegex()).dropLastWhile { it.isEmpty() }.toTypedArray()
-                        for (m in 1 until temp.size) {
-                            val frag = temp[m].split("<".toRegex()).dropLastWhile { it.isEmpty() }.toTypedArray()
-                            source = source + frag[0]
-                        }
+                        (1 until temp.size)
+                                .asSequence()
+                                .map { m -> temp[m].split("<".toRegex()).dropLastWhile { it.isEmpty() }.toTypedArray() }
+                                .forEach { source += it[0] }
                         source = source.trim { it <= ' ' }
                         source = source.replace("  ".toRegex(), " ")
 
@@ -339,10 +331,10 @@ class Dict : AppCompatActivity(), Constants {
                         originalTarget = originalTarget.replace("\n".toRegex(), "")
                         originalTarget = removeGenus(originalTarget)
                         temp = originalTarget.split(">".toRegex()).dropLastWhile { it.isEmpty() }.toTypedArray()
-                        for (m in temp.indices) {
-                            val frag = temp[m].split("<".toRegex()).dropLastWhile { it.isEmpty() }.toTypedArray()
-                            target = target + frag[0]
-                        }
+                        temp.indices
+                                .asSequence()
+                                .map { m -> temp[m].split("<".toRegex()).dropLastWhile { it.isEmpty() }.toTypedArray() }
+                                .forEach { target += it[0] }
                         target = target.trim { it <= ' ' }
                         target = target.replace("  ".toRegex(), " ")
                         target = target.replace("&#39;".toRegex(), "'")
@@ -364,7 +356,7 @@ class Dict : AppCompatActivity(), Constants {
         var originalTarget = originalTarget
 
         for (i in 0 until genus.size)
-            originalTarget = originalTarget.replace(genus.get(i), "")
+            originalTarget = originalTarget.replace(genus[i], "")
 
         return originalTarget
     }
